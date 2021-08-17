@@ -7,6 +7,22 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
+
+const mongoose = require('mongoose');
+
+var url = 'mongodb+srv://bryangoh:2DerN-A.*$n56!y@cluster0.l3ofw.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
+
+const connect = mongoose.connect(url,   {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useUnifiedTopology: true,
+});
+
+
+connect.then((db) => {
+  console.log("Connected correctly to database: ");
+}, (err) => { console.log(err); });
+
 var app = express();
 
 // view engine setup
