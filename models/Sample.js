@@ -17,4 +17,4 @@ const SampleSchema = new Schema({
 
 var Samples = mongoose.model('Sample' , SampleSchema);
 
-module.exports = Samples;
+module.exports = Samplesw;
