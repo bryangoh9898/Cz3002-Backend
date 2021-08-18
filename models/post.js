@@ -6,5 +6,7 @@ var Post = new Schema({
         type: String,
     }
 });
-//deleting branch test
+
+//added some stuff
+
 module.exports = mongoose.model('Post', Post);
