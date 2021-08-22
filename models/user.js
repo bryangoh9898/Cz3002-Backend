@@ -12,6 +12,9 @@ var User = new Schema({
     //     type: String,
     //     required: true
     // }
+    ThreadIdsAnswered: [Number],
+    ThreadIdsPosted: [Number],
+    
 });
 
 User.plugin(passportLocalMongoose);
