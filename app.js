@@ -8,7 +8,6 @@ var authenticate = require('./authenticate');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var postsRouter = require('./routes/post');
 
 const mongoose = require('mongoose');
 
@@ -40,7 +39,6 @@ app.use(passport.initialize());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/posts', postsRouter);
 app.use(express.static(path.join(__dirname, 'public')));
  
 //other routers that needs authentication place here
