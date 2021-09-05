@@ -13,6 +13,26 @@ const mongoose = require('mongoose');
 
 var url = 'mongodb+srv://bryangoh:2DerN-A.*$n56!y@cluster0.l3ofw.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
 
+const httpServer = require("http").createServer(app);
+const options = { cors: {
+    origin: ["http://localhost:3000","https://admin.socket.io/#/","https://localhost:3443"],
+} };
+const io = require("socket.io")(httpServer, options);
+const port = process.env.PORT || 4001;
+const { instrument } = require("@socket.io/admin-ui");
+
+httpServer.listen(port,()=>{
+  console.log(`listening on port ${port}`)
+});
+
+const initQuizListeners = require("./quizGame/quizListeners");
+initQuizListeners(io);
+
+instrument(io, {
+  readonly: true,
+  auth: false
+});
+
 const connect = mongoose.connect(url,   {
   useNewUrlParser: true,
   useCreateIndex: true,
