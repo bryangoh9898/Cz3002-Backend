@@ -8,7 +8,8 @@ var authenticate = require('./authenticate');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
+var threadRouter = require('./routes/thread');
+var facultyRouter = require('./routes/faculty');
 const mongoose = require('mongoose');
 
 var url = 'mongodb+srv://bryangoh:2DerN-A.*$n56!y@cluster0.l3ofw.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
@@ -59,6 +60,8 @@ app.use(passport.initialize());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/threads', threadRouter);
+app.use('/facultyRouter', facultyRouter);
 app.use(express.static(path.join(__dirname, 'public')));
  
 //other routers that needs authentication place here

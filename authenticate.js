@@ -19,6 +19,10 @@ exports.getToken = function(user) {
         {expiresIn: 72000});
 };
 
+exports.getUserId = function(token){
+    return jwt.verify(token, config.secretKey)._id;
+}
+
 var opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = config.secretKey;
@@ -40,3 +44,4 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
     }));
 
 exports.verifyUser = passport.authenticate('jwt', {session: false});
+

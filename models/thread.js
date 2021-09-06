@@ -29,11 +29,20 @@ var Thread = new Schema({
         required: true
     },
     OriginalUserId:{
-        type: Number,
+        type: String,
         required: true
     },
     OriginalUserName:{
         type: String
+    },
+    Faculty:{
+        type: String
+    },
+    ThreadUpVotes:{
+        type: Number
+    },
+    ThreadDownVotes:{
+        type: Number
     },
     Answers: [Answer]
 
