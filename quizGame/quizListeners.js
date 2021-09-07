@@ -172,17 +172,10 @@ io.on("connection", (socket) => {
         }
         if(gameState[roomName].qn.ans == guess)
         {
-          if(gameState[roomName].guessCorrect == true)
-          {
-            gameState[roomName].users[socket.id].points++;
-            sendCorrectGuessMsg(1);
-          }
-          else{
-            gameState[roomName].guessCorrect = true;
-            gameState[roomName].users[socket.id].points +=2;
-            sendCorrectGuessMsg(2);
-          }
-          
+          let responseTime = GUESS_TIME- gameState[roomName].timer;
+          let pointsToAdd = parseInt((1-((responseTime/GUESS_TIME)/2)) * 1000);
+          gameState[roomName].users[socket.id].points += pointsToAdd;
+          sendCorrectGuessMsg(pointsToAdd);          
         }
         else
         {

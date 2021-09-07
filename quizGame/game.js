@@ -11,8 +11,7 @@ const GUESS_TIME = 30;
       timer:0,
       qn:{question:"",answers:[],ans:0},
       private:private,//private room or public room
-      courseCode:"CZ 3002",
-      guessCorrect:false
+      courseCode:"CZ 3002"
     };
     return state;
   }
@@ -23,8 +22,7 @@ const GUESS_TIME = 30;
     }
     state.round = 0;
     state.timer = 0;
-    state.qn = {question:"",answers:[],ans:0},
-    state.guessCorrect = false;
+    state.qn = {question:"",answers:[],ans:0};
   }
 
   function gameLoop(state)
@@ -50,7 +48,6 @@ const GUESS_TIME = 30;
     state.round = 1;
     state.timer = GUESS_TIME;
     state.qn = getRandomQn(state);
-    state.guessCorrect=false;
   }
 
   function startNewRound(state)
@@ -58,7 +55,6 @@ const GUESS_TIME = 30;
     state.round++;
     state.timer = GUESS_TIME;
     state.qn = getRandomQn(state);
-    state.guessCorrect=false;
     //make every user can guess once again
     for (const userID in state.users) {
         state.users[userID].guessed = false;
@@ -80,8 +76,6 @@ const GUESS_TIME = 30;
   //call this when someone guessed
   function checkIfAllGuessed(state)
   {
-    if(state.phase ==1)
-    {
       for (const userID in state.users) {
         if(state.users[userID].guessed == false){
           //end function if someone haven guess
@@ -90,7 +84,6 @@ const GUESS_TIME = 30;
       }
       //all have guessed
       state.timer=0;
-    }
   }
 
   module.exports = {
