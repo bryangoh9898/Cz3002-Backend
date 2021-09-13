@@ -23,7 +23,7 @@ router.get('/', cors.cors , function(req, res, next) {
   });
 });
 
-router.post('/signup', cors.cors ,(req,res,next) => {
+router.route('/signup').options(cors.cors, (req,res) => { res.sendStatus(200);  }).post(cors.cors ,(req,res,next) => {
   User.register(new User ({username: req.body.username}), 
   req.body.password, (err, user) => {
     if(err){
@@ -41,7 +41,7 @@ router.post('/signup', cors.cors ,(req,res,next) => {
   });
 });
 
-router.post('/login', cors.cors , passport.authenticate('local'),  (req,res) => {
+router.route('/login').options(cors.cors, (req,res) => { res.sendStatus(200);  }).post(cors.cors , passport.authenticate('local'),  (req,res) => {
   var token = authenticate.getToken({_id: req.user._id});
   res.statusCode = 200;
   res.setHeader('Content-Type' , 'application/json');
