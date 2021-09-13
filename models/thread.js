@@ -11,9 +11,29 @@ const Answer = new Schema({
     },
     Ratings: {
         type: Number
+    },
+    Downvote: {
+        type: Number,
+    },
+    Upvote: {
+        type:Number
     }
 }, {
     timestamps: true
+});
+
+const Votes = new Schema({
+    IsUpvoted: {
+        type: Boolean
+    },
+    IsDownVoted: {
+        type: Boolean
+    },
+    userId: {
+        type: String
+    }
+},{
+    timestamps:true
 });
 
 
@@ -38,14 +58,15 @@ var Thread = new Schema({
     Faculty:{
         type: String
     },
+    UsersWhoUpvoted: [String],
     ThreadUpVotes:{
         type: Number
     },
     ThreadDownVotes:{
         type: Number
     },
+    UsersWhoDownVoted: [String],
     Answers: [Answer]
-
 }, {
     timestamps: true
 });

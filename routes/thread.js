@@ -35,6 +35,21 @@ threadRouter.route('/')
 //     .catch((err) => next(err));
 // });
 
+//Retrieves the lastest threads for the main page
+threadRouter.route('/getLatestThreads/:NumberOfLatest')
+.options(cors.cors, (req,res) => {res.sendStatus(200);})
+.get(cors.cors, authenticate.verifyUser, (req ,res ,next) => {
+    Threads.find({}).sort({createdAt: -1}).limit(parseInt(req.params.NumberOfLatest, 10))
+    .then((threads) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type' , 'application/json');
+        res.json(threads);
+    }, (err) => next(err))
+    .catch((err) => next(err));
+})
+
+
+
 //Retrieves all the threads inside a course
 //Returns all the threads in order of dateTime , with the earliest above
 threadRouter.route('/:CourseNumber')
@@ -58,58 +73,6 @@ threadRouter.route('/:CourseNumber')
     .catch((err) => next(err))
 })
 
-//Filters all the threads by its upvote
-threadRouter.route('/api/FilterByUpvotes/:CourseNumber')
-.options(cors.cors, (req,res) => {res.sendStatus(200);})
-.get(cors.cors, authenticate.verifyUser, (req,res,next) => {
-    Threads.find({CourseNumber: req.params.CourseNumber}).sort({ThreadUpVotes: -1})
-    .then((threads) => {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json(threads);
-    }, (err) => next(err))
-    .catch((err) => next(err));
-})
-
-//Upvotes 
-threadRouter.route('/api/Upvote/:ThreadId')
-.options(cors.cors, (req, res) => {res.sendStatus(200);})
-.put(cors.cors, authenticate.verifyUser, (req,res,next) => {
-    Threads.findByIdAndUpdate(req.params.ThreadId)
-    .then((thread) => {
-        var tempUpvote = thread.ThreadUpVotes;
-        tempUpvote++;
-        //update into thread and save
-        thread.ThreadUpVotes = tempUpvote;
-        thread.save()
-        .then((thread) => {
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            res.json(thread);
-        }, (err) => next(err));    
-    }, (err) => next(err))
-    .catch((err) => next(err));
-})
-
-//Downvotes 
-threadRouter.route('/api/Downvote/:ThreadId')
-.options(cors.cors, (req,res) => {res.sendStatus(200);})
-.put(cors.cors, authenticate.verifyUser, (req,res,next) => {
-    Threads.findByIdAndUpdate(req.params.ThreadId)
-    .then((thread) => {
-        var tempDownvote = thread.ThreadDownVotes;
-        tempDownvote ++;
-        thread.ThreadDownVotes = tempDownvote;
-        thread.save()
-        .then((thread) => {
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            res.json(thread);
-        }, (err) => next(err));
-    }, (err) => next(err))
-    .catch((err) => next(err));
-})
-
 
 //This is for posting a new thread 
 threadRouter.route('/PostNewThread')
@@ -127,7 +90,9 @@ threadRouter.route('/PostNewThread')
         Faculty: req.body.Faculty,
         ThreadDownVotes: 0,
         ThreadUpVotes: 0,
-        Answers: []
+        Answers: [],
+        UsersWhoDownVoted: [],
+        UsersWhoUpvoted: [],
         //hidden username
     })
     .then((thread) => {
@@ -138,6 +103,122 @@ threadRouter.route('/PostNewThread')
     }, (err) => next(err))
     .catch((err) => next(err));
 });
+
+/* --------------------------API calls-------------------------------- */
+
+//Filters all the threads by its upvote
+threadRouter.route('/api/FilterByUpvotes/:CourseNumber')
+.options(cors.cors, (req,res) => {res.sendStatus(200);})
+.get(cors.cors, authenticate.verifyUser, (req,res,next) => {
+    Threads.find({CourseNumber: req.params.CourseNumber}).sort({ThreadUpVotes: -1})
+    .then((threads) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(threads);
+    }, (err) => next(err))
+    .catch((err) => next(err));
+})
+
+
+//Retrieves the highest upvotes for the main page
+threadRouter.route('/api/getHighestUpvotesThread/:NumberOfThreads')
+.options(cors.cors, (req,res) => {res.sendStatus(200);})
+.get(cors.cors, authenticate.verifyUser, (req,res,next) => {
+    Threads.find({}).sort({ThreadUpVotes: -1}).limit(parseInt(req.params.NumberOfThreads))
+    .then((threads) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(threads);
+    }, (err) => next(err))
+    .catch((err) => next(err));
+})
+
+
+//Upvotes for the question
+threadRouter.route('/api/Upvote/:ThreadId')
+.options(cors.cors, (req, res) => {res.sendStatus(200);})
+.put(cors.cors, authenticate.verifyUser, (req,res,next) => {
+    var TokenArray = req.headers.authorization.split(" ");
+    var userId = authenticate.getUserId(TokenArray[1]);
+
+    Threads.findByIdAndUpdate({"_id": req.params.ThreadId})
+    .then((thread) => {
+
+        for(let j = 0 ; j < thread.UsersWhoUpvoted.length; j++){
+            if(thread.UsersWhoUpvoted[j] === userId){
+                res.statusCode = 500;
+                res.json("Error, user has already upvoted previously");
+                return res
+            }
+        }       
+   
+        for(let i = 0 ; i < thread.UsersWhoDownVoted.length; i++){
+            if(thread.UsersWhoDownVoted[i] === userId){
+                var tempDownVote = thread.ThreadDownVotes;
+                tempDownVote--;
+                thread.ThreadDownVotes = tempDownVote;
+                //remove user from the list 
+                thread.UsersWhoDownVoted.pull(userId);
+            }
+        }
+     
+        var tempUpvote = thread.ThreadUpVotes;
+        tempUpvote++;
+        //update into thread and save
+        thread.ThreadUpVotes = tempUpvote;
+        thread.UsersWhoUpvoted.push(userId);
+        thread.save()
+        .then((thread) => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(thread);
+        }, (err) => next(err)); 
+    }, (err) => next(err))
+    .catch((err) => next(err));
+})
+
+//Downvotes for the question
+threadRouter.route('/api/Downvote/:ThreadId')
+.options(cors.cors, (req,res) => {res.sendStatus(200);})
+.put(cors.cors, authenticate.verifyUser, (req,res,next) => {
+
+    var TokenArray = req.headers.authorization.split(" ");
+    var userId = authenticate.getUserId(TokenArray[1]);
+    Threads.findByIdAndUpdate({"_id": req.params.ThreadId})
+    .then((thread) => {
+
+        for(let j = 0 ; j < thread.UsersWhoDownVoted.length; j++){
+            if(thread.UsersWhoDownVoted[j] === userId){
+                res.statusCode = 500;
+                res.json("Error, User has already downvoted this thread");
+                return res;
+            }
+        }
+       
+        for(let i = 0 ; i < thread.UsersWhoUpvoted.length; i++){
+            if(thread.UsersWhoUpvoted[i] === userId){
+                var tempUpVote = thread.ThreadUpVotes;
+                tempUpVote--;
+                thread.ThreadUpVotes = tempUpVote;
+                //remove user from the list 
+                thread.UsersWhoUpvoted.pull(userId);
+            }
+        }
+      
+        var tempDownvote = thread.ThreadDownVotes;
+        tempDownvote ++;
+        thread.ThreadDownVotes = tempDownvote;
+        thread.UsersWhoDownVoted.push(userId);
+        thread.save()
+        .then((thread) => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(thread);
+        }, (err) => next(err));
+    }, (err) => next(err))
+    .catch((err) => next(err));
+})
+
 
 
 module.exports = threadRouter;
