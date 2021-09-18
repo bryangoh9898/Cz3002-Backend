@@ -9,6 +9,7 @@ const GUESS_TIME = 30;
       users:{/* socket.id:{username:XXX,points:XX,guessed:false,ready:false} */},
       round:0,
       timer:0,
+      qns:[],
       qn:{question:"",answers:[],ans:0},
       private:private,//private room or public room
       courseCode:"CZ 3002"
@@ -48,6 +49,7 @@ const GUESS_TIME = 30;
     state.round = 1;
     state.timer = GUESS_TIME;
     state.qn = getRandomQn(state);
+    state.qns.push(state.qn);
   }
 
   function startNewRound(state)
@@ -55,6 +57,7 @@ const GUESS_TIME = 30;
     state.round++;
     state.timer = GUESS_TIME;
     state.qn = getRandomQn(state);
+    state.qns.push(state.qn);
     //make every user can guess once again
     for (const userID in state.users) {
         state.users[userID].guessed = false;
