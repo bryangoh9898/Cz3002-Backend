@@ -42,10 +42,11 @@ router.route('/signup').options(cors.cors, (req,res) => { res.sendStatus(200);  
 });
 
 router.route('/login').options(cors.cors, (req,res) => { res.sendStatus(200);  }).post(cors.cors , passport.authenticate('local'),  (req,res) => {
-  var token = authenticate.getToken({_id: req.user._id});
+  const {_id,username} = req.user;
+  var token = authenticate.getToken({_id});
   res.statusCode = 200;
   res.setHeader('Content-Type' , 'application/json');
-  res.json({success : true, token: token, status: 'Login Successful'});
+  res.json({success : true, token: token,id:_id,username:username, status: 'Login Successful'});
 });
 
 module.exports = router;
