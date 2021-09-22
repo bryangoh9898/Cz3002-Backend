@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const authenticate = require('../authenticate');
 const cors = require('./cors');
 const Threads = require('../models/thread');
-const thread = require('../models/thread');
+const Users = require('../models/user');
 
 const threadRouter = express.Router();
 
@@ -12,7 +12,7 @@ threadRouter.use(bodyParser.json());
 
 //add cors for every route here
 
-threadRouter.route('/')
+threadRouter.route('/getAllThreads')
 .options(cors.cors, (req,res) => { res.sendStatus(200);  })
 .get(cors.cors, (req,res,next) => {
     Threads.find({})
@@ -23,17 +23,22 @@ threadRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-//This is to post a new post
-// .post(cors.cors, authenticate.verifyUser, (req, res, next) => {
-//     Threads.create(req.body)
-//     .then((thread) => {
-//         console.log('Post created', post);
-//         res.statusCode = 200;
-//         res.setHeader('Content-Type' , 'application/json');
-//         res.json(thread);
-//     }, (err) => next(err))
-//     .catch((err) => next(err));
-// });
+
+
+//Retrieves a specific thread by its ID 
+threadRouter.route('/getAllThreads/:threadId')
+.options(cors.cors, (req, res ) => {res.sendStatus(200);})
+.get(cors.cors, authenticate.verifyUser, (req,res,next) => {
+    console.log('Printing' + req.params.threadId);
+    console.log('Comes here');
+    Threads.findById(req.params.threadId)
+    .then((thread) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type' , 'application/json');
+        res.json(thread);
+    }, (err) => next(err))
+    .catch((err) => next(err));
+})
 
 //Retrieves the lastest threads for the main page
 threadRouter.route('/getLatestThreads/:NumberOfLatest')
@@ -74,6 +79,8 @@ threadRouter.route('/:CourseNumber')
 })
 
 
+
+
 //This is for posting a new thread 
 threadRouter.route('/PostNewThread')
 .options(cors.cors, (req,res) => {res.sendStatus(200); })
@@ -81,27 +88,32 @@ threadRouter.route('/PostNewThread')
     //This parses the token to find who's the corresponding user
     var TokenArray = req.headers.authorization.split(" ");
     var userId = authenticate.getUserId(TokenArray[1]);
-
+    //I'll save the username from the user 
     //I'll add this userId into the intialization of a new post
-    Threads.create({
-        CourseNumber: req.body.CourseNumber,
-        Question: req.body.Question,
-        OriginalUserId: userId,
-        Faculty: req.body.Faculty,
-        ThreadDownVotes: 0,
-        ThreadUpVotes: 0,
-        Answers: [],
-        UsersWhoDownVoted: [],
-        UsersWhoUpvoted: [],
-        //hidden username
+    Users.findById(userId)
+    .then((user) => {
+        Threads.create({
+            CourseNumber: req.body.CourseNumber,
+            Question: req.body.Question,
+            OriginalUserId: userId,
+            Faculty: req.body.Faculty,
+            ThreadDownVotes: 0,
+            ThreadUpVotes: 0,
+            Answers: [],
+            UsersWhoDownVoted: [],
+            UsersWhoUpvoted: [],
+            OriginalUserName: user.username,
+            //hidden username
+        })
+        .then((thread) => {
+            console.log('New thread created' , thread);
+            res.statusCode = 200;
+            res.setHeader('Content-Type' , 'application/json');
+            res.json(thread);
+        }, (err) => next(err))
+        .catch((err) => next(err));
     })
-    .then((thread) => {
-        console.log('New thread created' , thread);
-        res.statusCode = 200;
-        res.setHeader('Content-Type' , 'application/json');
-        res.json(thread);
-    }, (err) => next(err))
-    .catch((err) => next(err));
+
 });
 
 /* --------------------------API calls-------------------------------- */
