@@ -231,6 +231,66 @@ threadRouter.route('/api/Downvote/:ThreadId')
     .catch((err) => next(err));
 })
 
+//Resets their votes for a question
+threadRouter.route('/api/ResetVote/:ThreadId')
+.options(cors.cors, (req, res) => {res.sendStatus(200);})
+.put(cors.cors, authenticate.verifyUser, (req,res,next) => {
+    var TokenArray = req.headers.authorization.split(" ");
+    var userId = authenticate.getUserId(TokenArray[1]);
+    Threads.findByIdAndUpdate({"_id": req.params.ThreadId})
+    .then((thread) => {
+
+        var status = 0; 
+
+        for(let j = 0 ; j < thread.UsersWhoDownVoted.length; j++){
+            if(thread.UsersWhoDownVoted[j] === userId){
+               //user has downvote and we want to reset this 
+               var tempDownVote = thread.ThreadDownVotes;
+               tempDownVote --;
+               thread.ThreadDownVotes = tempDownVote;
+               thread.UsersWhoDownVoted.pull(userId);
+               status = 1; 
+            }
+        }
+
+        if(status == 0)
+        {       
+            for(let i = 0 ; i < thread.UsersWhoUpvoted.length; i++){
+                if(thread.UsersWhoUpvoted[i] === userId){
+                    var tempUpVote = thread.ThreadUpVotes;
+                    tempUpVote--;
+                    thread.ThreadUpVotes = tempUpVote;
+                    //remove user from the list 
+                    thread.UsersWhoUpvoted.pull(userId);
+                    status = 1;
+                }
+            }
+        }
+        
+        if(status == 0)
+        {
+            //user has not voted/downvoted
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.json("User has not voted or downvoted this question so invalid function")
+        }
+        else{
+            thread.save()
+            .then((thread) => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(thread);    
+            }, (err) => next(err))
+            .catch((err) => next(err));
+        }
+
+
+    }, (err) => next(err))
+    .catch((err) => next(err));
+
+
+})
+
 
 
 module.exports = threadRouter;
