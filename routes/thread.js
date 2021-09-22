@@ -79,8 +79,6 @@ threadRouter.route('/:CourseNumber')
 })
 
 
-
-
 //This is for posting a new thread 
 threadRouter.route('/PostNewThread')
 .options(cors.cors, (req,res) => {res.sendStatus(200); })
@@ -112,9 +110,44 @@ threadRouter.route('/PostNewThread')
             res.json(thread);
         }, (err) => next(err))
         .catch((err) => next(err));
-    })
+    }, (err) => next(err))
+    .catch((err) => next(err));
 
 });
+
+
+//This is for answering a thread
+threadRouter.route('/AnswerThread/:ThreadId')
+.options(cors.cors, (req,res) => {res.sendStatus(200); })
+.post(cors.cors, authenticate.verifyUser, (req,res,next) => {
+    var TokenArray = req.headers.authorization.split(" ");
+    var userId = authenticate.getUserId(TokenArray[1]);
+    Users.findById(userId)
+    .then((user) => {
+        Threads.findById(req.params.ThreadId)
+        .then((thread) => {
+            var newAnswer = {
+                AnsweringUserId: userId,
+                Answer: req.body.Answers,
+                AnsweringUserName: user.username,
+                Downvote: 0,
+                Upvote: 0,
+                UsersWhoUpvotedAnswer: [],
+                UsersWhoDownVotedAnswer: [],
+            }
+            thread.Answers.push(newAnswer);
+            thread.save()
+            .then((thread) => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type' , 'application/json');
+                res.json(thread);
+            })
+        }, (err) => next(err))
+        .catch((err) => next(err));
+    }, (err) => next(err))
+    .catch((err) => next(err));
+  
+})
 
 /* --------------------------API calls-------------------------------- */
 
@@ -287,9 +320,9 @@ threadRouter.route('/api/ResetVote/:ThreadId')
 
     }, (err) => next(err))
     .catch((err) => next(err));
-
-
 })
+
+
 
 
 

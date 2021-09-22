@@ -4,36 +4,24 @@ var Schema = mongoose.Schema;
 
 const Answer = new Schema({
     AnsweringUserId:{
-        type: Number,
+        type: String,
+    },
+    AnsweringUserName:{
+        type: String,
     },
     Answer: {
         type: String,
-    },
-    Ratings: {
-        type: Number
     },
     Downvote: {
         type: Number,
     },
     Upvote: {
         type:Number
-    }
+    },
+    UsersWhoUpvotedAnswer: [String],
+    UsersWhoDownVotedAnswer: [String],
 }, {
     timestamps: true
-});
-
-const Votes = new Schema({
-    IsUpvoted: {
-        type: Boolean
-    },
-    IsDownVoted: {
-        type: Boolean
-    },
-    userId: {
-        type: String
-    }
-},{
-    timestamps:true
 });
 
 
