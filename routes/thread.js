@@ -126,6 +126,12 @@ threadRouter.route('/AnswerThread/:ThreadId')
     .then((user) => {
         Threads.findById(req.params.ThreadId)
         .then((thread) => {
+            if(thread == null)
+            {
+                err = new Error('Thread ' + req.params.ThreadId + ' not found');
+                err.status = 404;
+                return next(err);
+            }
             var newAnswer = {
                 AnsweringUserId: userId,
                 Answer: req.body.Answers,
