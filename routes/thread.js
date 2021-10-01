@@ -5,6 +5,7 @@ const authenticate = require('../authenticate');
 const cors = require('./cors');
 const Threads = require('../models/thread');
 const Users = require('../models/user');
+const thread = require('../models/thread');
 
 const threadRouter = express.Router();
 
@@ -257,7 +258,7 @@ threadRouter.route('/api/Downvote/:ThreadId')
         }
       
         var tempDownvote = thread.ThreadDownVotes;
-        tempDownvote ++;
+        tempDownvote++;
         thread.ThreadDownVotes = tempDownvote;
         thread.UsersWhoDownVoted.push(userId);
         thread.save()
@@ -328,6 +329,177 @@ threadRouter.route('/api/ResetVote/:ThreadId')
     .catch((err) => next(err));
 })
 
+
+//This is for downvoting an ANSWER
+threadRouter.route('/api/Downvote/:ThreadId/Answers/:AnswersId')
+.options(cors.cors, (req,res) => {res.sendStatus(200);})
+.put(cors.cors, authenticate.verifyUser, (req,res,next) => {
+
+    var TokenArray = req.headers.authorization.split(" ");
+    var userId = authenticate.getUserId(TokenArray[1]);
+    Threads.findByIdAndUpdate({"_id": req.params.ThreadId})
+    .then((thread) => {
+        //Sanity check for if the user has already downvoted
+        for(let i = 0 ; i < thread.Answers.length; i++){
+            if(thread.Answers[i]._id == req.params.AnswersId){
+                for(let j = 0 ; j < thread.Answers[i].UsersWhoDownVotedAnswer.length; j++){
+                    //I'll check if this user has voted before
+                    if(thread.Answers[i].UsersWhoDownVotedAnswer[j] == userId){
+                        res.statusCode = 500;
+                        res.json("Error, use has already downvoted before");
+                        return res;
+                    }
+                }
+            }
+        }
+        //check if he has upvoted previously
+        for(let i = 0 ; i < thread.Answers.length; i++){
+            if(thread.Answers[i]._id == req.params.AnswersId){
+                for(let j = 0 ; j < thread.Answers[i].UsersWhoUpvotedAnswer.length; j++){
+                    if(thread.Answers[i].UsersWhoUpvotedAnswer[j] == userId){
+                        var tempUpVote = thread.Answers[i].Upvote;
+                        tempUpVote--;
+                        thread.Answers[i].Upvote = tempUpVote;
+                        thread.Answers[i].UsersWhoUpvotedAnswer.pull(userId);
+                    }
+                }
+            }
+        }
+        
+        for(let i = 0 ; i < thread.Answers.length; i++){
+            if(thread.Answers[i]._id == req.params.AnswersId){
+                var tempDownVote = thread.Answers[i].Downvote
+                tempDownVote++;
+                thread.Answers[i].Downvote = tempDownVote;
+                thread.Answers[i].UsersWhoDownVotedAnswer.push(userId);
+                thread.save()
+                .then((thread) => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(thread);
+                }, (err) => next(err))
+            }
+        }
+
+    }, (err) => next(err))
+    .catch((err) => next(err))
+})
+
+
+//This is for upvoting an ANSWER
+threadRouter.route('/api/Upvote/:ThreadId/Answers/:AnswersId')
+.options(cors.cors, (req,res) => {res.sendStatus(200);})
+.put(cors.cors, authenticate.verifyUser, (req,res,next) => {
+
+    var TokenArray = req.headers.authorization.split(" ");
+    var userId = authenticate.getUserId(TokenArray[1]);
+    Threads.findByIdAndUpdate({"_id": req.params.ThreadId})
+    .then((thread) => {
+        //Sanity check for if the user has already upvoed
+        for(let i = 0 ; i < thread.Answers.length; i++){
+            if(thread.Answers[i]._id == req.params.AnswersId){
+                for(let j = 0 ; j < thread.Answers[i].UsersWhoUpvotedAnswer.length; j++){
+                    //I'll check if this user has voted before
+                    if(thread.Answers[i].UsersWhoUpvotedAnswer[j] == userId){
+                        res.statusCode = 500;
+                        res.json("Error, use has already upvoted before");
+                        return res;
+                    }
+                }
+            }
+        }
+
+        //check if he has downvoted previously
+        for(let i = 0 ; i < thread.Answers.length; i++){
+            if(thread.Answers[i]._id == req.params.AnswersId){
+                for(let j = 0 ; j < thread.Answers[i].UsersWhoDownVotedAnswer.length; j++){
+                    if(thread.Answers[i].UsersWhoDownVotedAnswer[j] == userId){
+                        var tempDownVote = thread.Answers[i].Downvote;
+                        tempDownVote--;
+                        thread.Answers[i].Downvote = tempDownVote;
+                        thread.Answers[i].UsersWhoDownVotedAnswer.pull(userId);
+                    }
+                }
+            }
+        }
+        
+        for(let i = 0 ; i < thread.Answers.length; i++){
+            if(thread.Answers[i]._id == req.params.AnswersId){
+                var tempUpVote = thread.Answers[i].Upvote
+                tempUpVote++;
+                thread.Answers[i].Upvote = tempUpVote;
+                thread.Answers[i].UsersWhoUpvotedAnswer.push(userId);
+                thread.save()
+                .then((thread) => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(thread);
+                }, (err) => next(err))
+            }
+        }
+
+    }, (err) => next(err))
+    .catch((err) => next(err))
+})
+
+//Resets their votes for an answer
+threadRouter.route('/api/ResetVote/:ThreadId/Answers/:AnswerId')
+.options(cors.cors, (req, res) => {res.sendStatus(200);})
+.put(cors.cors, authenticate.verifyUser, (req,res,next) => {
+    var TokenArray = req.headers.authorization.split(" ");
+    var userId = authenticate.getUserId(TokenArray[1]);
+    Threads.findByIdAndUpdate({"_id": req.params.ThreadId})
+    .then((thread) => {
+        var status = 0; 
+
+        for(let i = 0 ; i < thread.Answers.length; i++){
+            if(thread.Answers[i]._id == req.params.AnswerId){
+                for(let j = 0 ; j < thread.Answers[i].UsersWhoDownVotedAnswer.length; j++){
+                    if(thread.Answers[i].UsersWhoDownVotedAnswer[j] == userId){
+                        var tempDownVote = thread.Answers[i].Downvote;
+                        tempDownVote--;
+                        thread.Answers[i].Downvote = tempDownVote;
+                        thread.Answers[i].UsersWhoDownVotedAnswer.pull(userId);
+                        status = 1;
+                    }
+                }
+
+                if(status == 0)
+                {
+                    for(let k = 0; k < thread.Answers[i].UsersWhoUpvotedAnswer.length; k++)
+                    {
+                        var tempUpVote = thread.Answers[i].Upvote;
+                        tempUpVote--;
+                        thread.Answers[i].Upvote = tempUpVote;
+                        thread.Answers[i].UsersWhoUpvotedAnswer.pull(userId);
+                        status =1;
+                    }
+                }
+
+                if(status == 0)
+                {
+                    res.statusCode = 500;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json("User has not voted or downvoted this question so invalid function") 
+                }
+                else
+                {
+                    thread.save()
+                    .then((thread) => {
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(thread);    
+                    }, (err) => next(err))
+                    .catch((err) => next(err));
+                }
+
+            }
+        }
+
+
+    }, (err) => next(err))
+    .catch((err) => next(err));
+})
 
 
 
