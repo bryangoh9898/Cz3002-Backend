@@ -62,7 +62,7 @@ threadRouter.route('/:CourseNumber')
 .options(cors.cors, (req, res ) => {res.sendStatus(200);})
 .get(cors.cors, authenticate.verifyUser, (req,res,next) => {
     //CAPS FIRST 2 letters of req.params.CourseNumber
-    const courseNum = req.params.CourseNumber.charAt(0).toUpperCase() + req.params.CourseNumber.charAt(1).toLowerCase() + req.params.CourseNumber.slice(2);
+    const courseNum = req.params.CourseNumber.charAt(0).toUpperCase() + req.params.CourseNumber.charAt(1).toUpperCase() + req.params.CourseNumber.slice(2);
     Threads.find({CourseNumber: courseNum}).sort({createdAt: -1})
     .then((threads) => {
         res.statusCode = 200;
