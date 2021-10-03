@@ -32,6 +32,9 @@ var Thread = new Schema({
     ThreadNumber:{
         type: Number
     },
+    Title:{
+        type: String
+    },
     Question:{
         type: String,
         required: true
