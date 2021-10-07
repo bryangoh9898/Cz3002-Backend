@@ -12,8 +12,8 @@ var User = new Schema({
     //     type: String,
     //     required: true
     // }
-    ThreadIdsAnswered: [Number],
-    ThreadIdsPosted: [Number],
+    ThreadIdsAnswered: [mongoose.Schema.Types.ObjectId],
+    ThreadIdsPosted: [mongoose.Schema.Types.ObjectId],
     
 });
 

@@ -30,8 +30,6 @@ threadRouter.route('/getAllThreads')
 threadRouter.route('/getAllThreads/:threadId')
 .options(cors.cors, (req, res ) => {res.sendStatus(200);})
 .get(cors.cors, authenticate.verifyUser, (req,res,next) => {
-    console.log('Printing' + req.params.threadId);
-    console.log('Comes here');
     Threads.findById(req.params.threadId)
     .then((thread) => {
         res.statusCode = 200;
@@ -91,7 +89,7 @@ threadRouter.route('/PostNewThread')
     var userId = authenticate.getUserId(TokenArray[1]);
     //I'll save the username from the user 
     //I'll add this userId into the intialization of a new post
-    Users.findById(userId)
+    Users.findByIdAndUpdate(userId)
     .then((user) => {
         Threads.create({
             CourseNumber: req.body.CourseNumber,
@@ -108,10 +106,14 @@ threadRouter.route('/PostNewThread')
             //hidden username
         })
         .then((thread) => {
-            console.log('New thread created' , thread);
-            res.statusCode = 200;
-            res.setHeader('Content-Type' , 'application/json');
-            res.json(thread);
+            user.ThreadIdsPosted.push(thread._id)
+            user.save()
+            .then(() => {
+                console.log('New thread created' , thread);
+                res.statusCode = 200;
+                res.setHeader('Content-Type' , 'application/json');
+                res.json(thread);
+            })
         }, (err) => next(err))
         .catch((err) => next(err));
     }, (err) => next(err))
@@ -148,9 +150,15 @@ threadRouter.route('/AnswerThread/:ThreadId')
             thread.Answers.push(newAnswer);
             thread.save()
             .then((thread) => {
+                user.ThreadIdsAnswered.push(thread._id)
+                user.save()
+                .then(() => {
+                console.log('New thread created' , thread);
                 res.statusCode = 200;
                 res.setHeader('Content-Type' , 'application/json');
                 res.json(thread);
+            })
+                
             })
         }, (err) => next(err))
         .catch((err) => next(err));
