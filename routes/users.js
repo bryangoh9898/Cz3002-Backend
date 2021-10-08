@@ -51,10 +51,10 @@ router.route('/login').options(cors.cors, (req,res) => { res.sendStatus(200);  }
 });
 
 
+//Retrieves all the thread_id user is involved in
 router.route('/getUserInformation')
 .options(cors.cors, (req,res) => {res.sendStatus(200); })
 .get(cors.cors, authenticate.verifyUser, (req,res,next) => {
-
   var TokenArray = req.headers.authorization.split(" ");
   var userId = authenticate.getUserId(TokenArray[1]);
   User.findById(userId)
@@ -156,6 +156,34 @@ router.route('/getAnswersPost')
 })
 
 
+router.route('/getThreadForUserAnswersPosted')
+.options(cors.cors, (req,res) => {res.sendStatus(200); })
+.get(cors.cors, authenticate.verifyUser, (req,res,next) => {
+  var TokenArray = req.headers.authorization.split(" ");
+  var userId = authenticate.getUserId(TokenArray[1]);
+  User.findById(userId)
+  .then((user) => {
+    Threads.find({
+      '_id' : {$in: user.ThreadIdsAnswered},
+    },function(err, docs){
+      //Docs to return only the answer 
+      //for all the thread, find the one user has answered
+      obj = {}
+      var tempX = 0
+      for(var i = 0 ; i < docs.length; i++){
+        for(var x = 0 ; x < docs[i].Answers.length; x++){
+          if(docs[i].Answers[x].AnsweringUserId == userId){
+            obj[tempX] = [docs[i].Answers[x], docs[i].Title, docs[i]._id]
+            tempX++
+          }
+        }
+      }
+      res.statusCode = 200;
+      res.setHeader('Content-Type' , 'application/json');
+      res.json(obj);
+    })
+  })
+})
 
 
 
