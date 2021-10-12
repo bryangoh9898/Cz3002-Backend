@@ -80,6 +80,7 @@ threadRouter.route('/:CourseNumber')
 })
 
 
+
 //This is for posting a new thread 
 threadRouter.route('/PostNewThread')
 .options(cors.cors, (req,res) => {res.sendStatus(200); })
@@ -140,7 +141,7 @@ threadRouter.route('/AnswerThread/:ThreadId')
             }
             var newAnswer = {
                 AnsweringUserId: userId,
-                Answer: req.body.Answers,
+                Answer: req.body.Answer,
                 AnsweringUserName: user.username,
                 Downvote: 0,
                 Upvote: 0,
@@ -153,10 +154,26 @@ threadRouter.route('/AnswerThread/:ThreadId')
                 user.ThreadIdsAnswered.push(thread._id)
                 user.save()
                 .then(() => {
-                console.log('New thread created' , thread);
-                res.statusCode = 200;
-                res.setHeader('Content-Type' , 'application/json');
-                res.json(thread);
+                //Updates the original user 
+                var OriginalUserId = thread.OriginalUserId
+                Users.findByIdAndUpdate(OriginalUserId)
+                .then((originalUser) => {
+                    originalUser.NotificationNumber += 1
+                    var newNotification =  {
+                        threadID: thread._id,
+                        Reply: req.body.Answer,
+                        UserWhoReplied: user.username,
+                        ThreadTitle: thread.Title
+                    }
+                    originalUser.Notifications.push(newNotification)
+                    originalUser.save()
+                    .then(() => {
+                        console.log('New thread created' , thread);
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type' , 'application/json');
+                        res.json(thread);
+                    })
+                })
             })
                 
             })

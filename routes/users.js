@@ -25,7 +25,7 @@ router.get('/', cors.cors , function(req, res, next) {
 });
 
 router.route('/signup').options(cors.cors, (req,res) => { res.sendStatus(200);  }).post(cors.cors ,(req,res,next) => {
-  User.register(new User ({username: req.body.username}), 
+  User.register(new User ({username: req.body.username, NotificationNumber: 0}), 
   req.body.password, (err, user) => {
     if(err){
       res.statusCode = 500;
@@ -64,7 +64,15 @@ router.route('/getUserInformation')
     res.json(user);
   })
 })
-
+.delete(cors.cors, authenticate.verifyUser, (req,res,next) => {
+  User.deleteMany({})
+  .then(() => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type' , 'application/json');
+      res.json("Successful");
+  }, (err) => next(err))
+  .catch((err) => next(err))
+})
 
 //Includes both the answers and questions
 router.route('/getUserContributionCount')
@@ -184,6 +192,43 @@ router.route('/getThreadForUserAnswersPosted')
     })
   })
 })
+
+//For polling for notificaiton
+router.route('/CheckNotification')
+.options(cors.cors, (req,res) => {res.sendStatus(200); })
+.get(cors.cors, authenticate.verifyUser, (req,res,next) => {
+  var TokenArray = req.headers.authorization.split(" ");
+  var userId = authenticate.getUserId(TokenArray[1]);
+  User.findById(userId)
+  .then((user) => {
+    res.statusCode = 200;
+    res.setHeader('Content-Type' , 'application/json');
+    res.json(user.NotificationNumber)
+  })
+})
+
+
+//When client clicks on notification to reset
+router.route('/RetrieveNotification')
+.options(cors.cors, (req,res) => {res.sendStatus(200); })
+.get(cors.cors, authenticate.verifyUser, (req,res,next) => {
+  var TokenArray = req.headers.authorization.split(" ");
+  var userId = authenticate.getUserId(TokenArray[1]);
+  User.findByIdAndUpdate(userId)
+  .then((user) => {
+    var tempNotif = user.NotificationNumber
+    obj = {}
+    obj = [tempNotif,user.Notifications]
+    user.NotificationNumber = 0;
+    user.save()
+    .then((user) => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type' , 'application/json');
+      res.json(obj)
+    })
+  })
+})
+
 
 
 

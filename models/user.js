@@ -2,6 +2,24 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 
+
+const Notification = new Schema({
+    threadID:{
+        type: mongoose.Schema.Types.ObjectId,
+    },
+    Reply:{
+        type: String,
+    },
+    UserWhoReplied: {
+        type: String,
+    },
+    ThreadTitle: {
+        type: String
+    }
+}, {
+    timestamps: true
+});
+
 var User = new Schema({
     // username: {
     //     type: String,
@@ -14,8 +32,14 @@ var User = new Schema({
     // }
     ThreadIdsAnswered: [mongoose.Schema.Types.ObjectId],
     ThreadIdsPosted: [mongoose.Schema.Types.ObjectId],
-    
+    NotificationNumber: Number,
+    Notifications: [Notification]
 });
+
+
+
+
+
 
 User.plugin(passportLocalMongoose);
 
