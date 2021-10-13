@@ -49,6 +49,7 @@ const GUESS_TIME = 30;
     state.round = 1;
     state.timer = GUESS_TIME;
     state.qn = getRandomQn(state);
+    state.qns = [];
     state.qns.push(state.qn);
   }
 
@@ -56,8 +57,11 @@ const GUESS_TIME = 30;
   {
     state.round++;
     state.timer = GUESS_TIME;
-    state.qn = getRandomQn(state);
-    state.qns.push(state.qn);
+    if(state.round <= 5)
+    {
+      state.qn = getRandomQn(state);
+      state.qns.push(state.qn);
+    }
     //make every user can guess once again
     for (const userID in state.users) {
         state.users[userID].guessed = false;
