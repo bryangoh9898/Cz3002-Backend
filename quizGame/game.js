@@ -9,6 +9,7 @@ const GUESS_TIME = 30;
       users:{/* socket.id:{username:XXX,points:XX,guessed:false,ready:false} */},
       round:0,
       timer:0,
+      qnsIndexNotTaken:[],
       qns:[],
       qn:{question:"",answers:[],ans:0},
       private:private,//private room or public room
@@ -70,8 +71,19 @@ const GUESS_TIME = 30;
 
   function getRandomQn(state)
   {
-    const qnIndex = Math.floor(Math.random() * qns[state.courseCode].length);
+    if(state.qnsIndexNotTaken.length ==0)
+    {
+      for(let i =0;i< qns[state.courseCode].length;++i )
+      {
+        state.qnsIndexNotTaken.push(i);
+      }
+    }
+    
+    const qnNotTakenIndex = Math.floor(Math.random() * state.qnsIndexNotTaken.length);
+    const qnIndex = state.qnsIndexNotTaken[qnNotTakenIndex];
     const qn=  qns[state.courseCode][qnIndex];
+
+    state.qnsIndexNotTaken.splice(qnNotTakenIndex, 1);
     return qn;
   }
   function createUser(username)
